@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Location {
+  id          String       @id @default(uuid())
+  name        String       @db.VarChar(255)
+  description String       @db.Text
+  slug        String       @unique @db.VarChar(100)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  timePeriods TimePeriod[]
+
+  @@map("locations")
+}
+
+model TimePeriod {
+  id              String     @id @default(uuid())
+  locationId      String     @map("location_id")
+  name            String     @db.VarChar(255)
+  eraSlug         String     @map("era_slug") @db.VarChar(100)
+  yearStart       Int        @map("year_start")
+  yearEnd         Int        @map("year_end")
+  description     String     @db.Text
+  environmentData Json       @map("environment_data")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  location        Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  characters      Character[]
+  buildings       Building[]
+
+  @@map("time_periods")
+}
+
+model Character {
+  id                  String     @id @default(uuid())
+  timePeriodId        String     @map("time_period_id")
+  name                String     @db.VarChar(255)
+  wikipediaPageTitle  String     @map("wikipedia_page_title") @db.VarChar(255)
+  birthYear           Int        @map("birth_year")
+  deathYear           Int        @map("death_year")
+  role                String     @db.VarChar(255)
+  positionX           Float      @map("position_x")
+  positionY           Float      @map("position_y")
+  positionZ           Float      @map("position_z")
+  modelType           String     @map("model_type") @db.VarChar(100)
+  fallbackDescription String     @map("fallback_description") @db.Text
+  greetingMessage     String     @map("greeting_message") @db.Text
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+  timePeriod          TimePeriod @relation(fields: [timePeriodId], references: [id], onDelete: Cascade)
+
+  @@map("characters")
+}
+
+model Building {
+  id           String     @id @default(uuid())
+  timePeriodId String     @map("time_period_id")
+  name         String     @db.VarChar(255)
+  type         String     @db.VarChar(100)
+  positionX    Float      @map("position_x")
+  positionY    Float      @map("position_y")
+  positionZ    Float      @map("position_z")
+  rotationY    Float      @map("rotation_y")
+  scale        Float
+  modelType    String     @map("model_type") @db.VarChar(100)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  timePeriod   TimePeriod @relation(fields: [timePeriodId], references: [id], onDelete: Cascade)
+
+  @@map("buildings")
+}
+
+model ConversationLog {
+  id          String   @id @default(uuid())
+  characterId String   @map("character_id")
+  userMessage String   @map("user_message") @db.Text
+  aiResponse  String   @map("ai_response") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("conversation_logs")
+}
